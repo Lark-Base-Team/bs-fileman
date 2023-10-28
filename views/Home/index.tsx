@@ -37,6 +37,7 @@ import {
   smartTimestampDisplay,
   fileExt,
   copyText,
+  splitFilename,
 } from "../../utils/shared";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/router";
@@ -47,7 +48,7 @@ import { createPortal } from "react-dom";
 import useMenu from "../../components/useMenu";
 import { FieldType } from "@lark-base-open/js-sdk";
 import { getFileTypeIconProps } from "@fluentui/react-file-type-icons";
-import { IconFilledArrowUp } from "@douyinfe/semi-icons";
+import { IconBolt, IconFilledArrowUp } from "@douyinfe/semi-icons";
 
 let base: any = null;
 let bridge: any = null;
@@ -445,6 +446,46 @@ export default function Home() {
     [getUrlLink]
   );
 
+  const pasteImport = useCallback(async () => {
+    // 获取剪切板内容
+    const text = await alertInput({
+      title: t("paste-import"),
+      content: t("paste-import-content"),
+    });
+    console.log(text); // {ok:true, data: "http://xxxx.png"}
+    if (text.ok && text.data) {
+      if (!text.data.startsWith("http")) {
+        Toast.error({ content: t("paste-import-fail") });
+        return;
+      }
+      const tid = Toast.info({
+        icon: <Spin />,
+        content: t("loading"),
+        duration: 0,
+      });
+      try {
+        const file = await urlToFile(text.data, splitFilename(text.data));
+        const newSelectImage = {
+          val: await fileToIOpenAttachment(base, file),
+          url: await fileToURL(file),
+        };
+        if (!selected?.selectFiles) return;
+        const newSelectImages = selected.selectFiles;
+        newSelectImages.push(newSelectImage);
+        const newSelected: any = {
+          ...selected,
+          selectImages: newSelectImages,
+        };
+        saveTable(newSelected);
+        setSelected(newSelected);
+        Toast.success({ content: t("upload-success") + file.name });
+      } catch (error) {
+        Toast.error({ content: t("upload-fail") + String(error) });
+      }
+      Toast.close(tid);
+    }
+  }, []);
+
   return (
     <div>
       {loading ? (
@@ -470,7 +511,16 @@ export default function Home() {
                 icon={<IconFilledArrowUp size="small" />}
                 onClick={() => (uploadRef.current as any)?.openFileDialog()}
               >
-                上传
+                {t("upload-btn")}
+              </Button>
+            </div>
+            <div className={styles["menu-item-btn"]}>
+              <Button
+                size="small"
+                icon={<IconBolt size="small" />}
+                onClick={() => pasteImport()}
+              >
+                {t("import-btn")}
               </Button>
             </div>
             {/* <div

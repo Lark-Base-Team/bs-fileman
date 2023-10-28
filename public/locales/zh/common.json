@@ -135,5 +135,10 @@
   "copying": "复制中....",
   "copy-tip-content": "当前链接只有24h的有效期，并且重新复制链接后之前的也会消失。",
   "copy-tip-title": "复制链接提示",
-  "preview-tip": "将在下次【运行】生效"
+  "preview-tip": "将在下次【运行】生效",
+  "upload-btn": "上传",
+  "import-btn": "粘贴导入",
+  "paste-import": "粘贴导入",
+  "paste-import-content": "我们可以将文件的链接粘贴到上面的文本框内进行导入上传附件。",
+  "paste-import-fail": "粘贴的地址不是http地址"
 }

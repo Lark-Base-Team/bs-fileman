@@ -36,5 +36,10 @@
   "copying": "Copying....",
   "copy-tip-content": "The current link is only valid for 24 hours, and the previous one will disappear after you copy the link again.",
   "copy-tip-title": "Copy link prompt",
-  "preview-tip": "It will take effect next time [run]"
+  "preview-tip": "It will take effect next time [run]",
+  "upload-btn": "upload",
+  "import-btn": "Paste import",
+  "paste-import": "Paste import",
+  "paste-import-content": "We can paste the link to the file into the text box above to import and upload attachments.",
+  "paste-import-fail": "The pasted address is not an http address"
 }

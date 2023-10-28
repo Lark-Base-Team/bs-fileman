@@ -94,10 +94,12 @@ export function downloadFile(file: File) {
   downloadLink.click();
 }
 
-export function urlToFile(url: string, filename: string, mimeType: string) {
+export function urlToFile(url: string, filename: string, mimeType?: string) {
   return fetch(url)
     .then((res) => res.blob())
-    .then((blob) => new File([blob], filename, { type: mimeType }));
+    .then(
+      (blob) => new File([blob], filename, { type: mimeType ?? blob.type })
+    );
 }
 
 export function fileExt(file: string, isDot = true) {
@@ -154,4 +156,11 @@ export function copyText(url: string) {
   input.select();
   document.execCommand("copy");
   document.body.removeChild(input);
+}
+
+export function splitFilename(url: string) {
+  const idx = url.lastIndexOf("/");
+  const idx2 = url.lastIndexOf("?");
+  const name = url.slice(idx + 1, idx2 === -1 ? undefined : idx2);
+  return name;
 }
