@@ -44,11 +44,15 @@ export async function canvasToFile(
   // const blob = dataURLToBlob(imageDataURL);
 
   const blob: Blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) return reject(new Error("canvas to blob error"));
-      resolve(blob);
-    }, fileType, 1);
-  })
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return reject(new Error("canvas to blob error"));
+        resolve(blob);
+      },
+      fileType,
+      1
+    );
+  });
 
   // 创建File对象
   const file = new File([blob], fileName, { type: fileType });
@@ -67,7 +71,11 @@ function dataURLToBlob(dataURL: string) {
   return new Blob([arrayBuffer], { type: mimeString });
 }
 
-export function base64ToFile(base64: string, filename: string, mimeType: string) {
+export function base64ToFile(
+  base64: string,
+  filename: string,
+  mimeType: string
+) {
   const arr = base64.split(",");
   const mime = arr[0].match(/:(.*?);/)![1];
   const bstr = atob(arr[1]);
@@ -92,12 +100,13 @@ export function urlToFile(url: string, filename: string, mimeType: string) {
     .then((blob) => new File([blob], filename, { type: mimeType }));
 }
 
-export function fileExt(file: string) {
-  const [name, ext] = file.split(".");
-  return [
-    name,
-    ext ? "." + ext.toLowerCase() : undefined
-  ]
+export function fileExt(file: string, isDot = true) {
+  const extIdx = file.lastIndexOf(".");
+  const [name, ext] =
+    extIdx === -1
+      ? [file, undefined]
+      : [file.slice(0, extIdx), file.slice(extIdx + 1)];
+  return [name, ext ? (isDot ? "." : "") + ext.toLowerCase() : undefined];
 }
 
 export function smartFileSizeDisplay(b: number): string {
@@ -136,4 +145,13 @@ export function smartTimestampDisplay(timestamp: number): string {
   //   return Math.floor(diff / 1000 / 60 / 60 / 24) + "天前";
   // }
   return date.toLocaleString();
+}
+
+export function copyText(url: string) {
+  const input = document.createElement("input");
+  input.value = url;
+  document.body.appendChild(input);
+  input.select();
+  document.execCommand("copy");
+  document.body.removeChild(input);
 }

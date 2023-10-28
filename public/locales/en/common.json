@@ -1,7 +1,7 @@
 {
-  "empty": "Please select the cell with pictures.",
+  "empty": "Please select a cell in the attachment column.",
   "no-support-file": "This type is not supported yet",
-  "image-tip": "Please click on the image above to edit or try dragging to change the order.",
+  "image-tip": "Please click on the file above to open it or try dragging it to change the order.",
   "filerobot": {},
   "save-success": "Saved successfully",
   "editing": "Editing new tab page...",
@@ -26,5 +26,15 @@
   "upload-drag-text": "Click to upload files or drag and drop files here",
   "upload-drag-sub": "Support any type of file",
   "loading": "uploading...",
-  "upload-success": "Upload successful:"
+  "upload-success": "Upload successful:",
+  "upload-fail": "upload failed:",
+  "preview-mode": "preview mode",
+  "menu-link": "copy Link",
+  "copy-success": "Copied successfully",
+  "viewer-no-support": "Preview is not supported",
+  "opening": "Opening...",
+  "copying": "Copying....",
+  "copy-tip-content": "The current link is only valid for 24 hours, and the previous one will disappear after you copy the link again.",
+  "copy-tip-title": "Copy link prompt",
+  "preview-tip": "It will take effect next time [run]"
 }

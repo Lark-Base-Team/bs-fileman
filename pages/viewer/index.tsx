@@ -1,12 +1,11 @@
-import type { NextPage } from 'next'
-import Head from 'next/head'
-import dynamic from 'next/dynamic'
+import type { NextPage } from "next";
+import Head from "next/head";
+import dynamic from "next/dynamic";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 
-const DynamicComponentWithNoSSR = dynamic(
-  () => import('./view'),
-  { ssr: false }
-)
+const DynamicComponentWithNoSSR = dynamic(() => import("./view"), {
+  ssr: false,
+});
 
 export async function getStaticProps({ locale }: any) {
   return {
@@ -21,12 +20,12 @@ const Home: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Base Script1</title>
+        <title>Viewer</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <DynamicComponentWithNoSSR></DynamicComponentWithNoSSR>
     </>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

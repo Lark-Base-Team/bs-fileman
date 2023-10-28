@@ -13,6 +13,7 @@ import {
   Dropdown,
   Descriptions,
   Upload,
+  Notification,
 } from "@douyinfe/semi-ui";
 import {
   IllustrationNoContent,
@@ -24,11 +25,7 @@ import {
 import styles from "./index.module.css";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import {
-  IconEyeClosedSolid,
-  IconGithubLogo,
-  IconHelpCircle,
-} from "@douyinfe/semi-icons";
+import { getFileTypeIconAsUrl } from "@fluentui/react-file-type-icons";
 import {
   canvasToFile,
   fileToIOpenAttachment,
@@ -38,6 +35,8 @@ import {
   urlToFile,
   smartFileSizeDisplay,
   smartTimestampDisplay,
+  fileExt,
+  copyText,
 } from "../../utils/shared";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/router";
@@ -47,8 +46,8 @@ import useModal from "../../components/useModal";
 import { createPortal } from "react-dom";
 import useMenu from "../../components/useMenu";
 import { FieldType } from "@lark-base-open/js-sdk";
-
-const Editor = dynamic(() => import("../../components/Editor"), { ssr: false });
+import { getFileTypeIconProps } from "@fluentui/react-file-type-icons";
+import { IconFilledArrowUp } from "@douyinfe/semi-icons";
 
 let base: any = null;
 let bridge: any = null;
@@ -59,24 +58,29 @@ let inited = false;
 type Selected = {
   field: any;
   select: any;
-  selectImages: { val: any; url: any }[];
+  selectFiles: { val: any; url: any }[];
 };
 
 if (typeof window !== "undefined") {
   window.devicePixelRatio = window.devicePixelRatio * 4;
 }
 
-const storeFullMode =
+const defaultConf = {
+  fullMode: false,
+  previewMode: false,
+};
+
+const storeConf =
   typeof localStorage !== "undefined"
-    ? localStorage.getItem("fullMode") === "1"
-    : false;
+    ? JSON.parse(localStorage.getItem("conf") || JSON.stringify(defaultConf))
+    : defaultConf;
 
 export default function Home() {
   const { Text } = Typography;
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [current, setCurrent] = useState(-1);
-  const [fullMode, setFullMode] = useState(storeFullMode);
+  const [conf, setConf] = useState<typeof defaultConf>(storeConf);
   const [selected, setSelected] = useState<Selected | undefined>(undefined);
   const [isAttachment, setIsAttachment] = useState(false);
   const [nextWin, setNextWin] = useState<Window | undefined>(undefined);
@@ -86,8 +90,17 @@ export default function Home() {
   const uploadRef = useRef();
 
   useEffect(() => {
-    localStorage.setItem("fullMode", fullMode ? "1" : "0");
-  }, [fullMode]);
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("conf", JSON.stringify(conf));
+    }
+  }, [conf]);
+
+  const setConfMerge = useCallback(
+    (conf: Partial<typeof defaultConf>) => {
+      setConf((conft: any) => ({ ...conft, ...conf }));
+    },
+    [setConf]
+  );
 
   const onSelectChange = useCallback(async () => {
     setLoading(true);
@@ -96,7 +109,7 @@ export default function Home() {
       const selected: Selected = {
         field: null,
         select: null,
-        selectImages: [],
+        selectFiles: [],
       };
       const select = await base.getSelection();
       const field: any = await table.getField(select.fieldId);
@@ -107,23 +120,31 @@ export default function Home() {
       }
       setIsAttachment(true);
       // const cell = await field.getCell(select.recordId);
-      const urls =
-        (await field
-          .getAttachmentUrls(select.recordId)
-          .catch((err: any) => console.log(err), [])) || [];
+      const urls = storeConf.previewMode
+        ? (await field
+            .getAttachmentUrls(select.recordId)
+            .catch((err: any) => console.log(err), [])) || []
+        : [];
+      // const urls =
+      // (await field
+      //   .getAttachmentThumbnailUrls(select.recordId)
+      //   .catch((err: any) => console.log(err), [])) || [];
+
       const vals =
         (await field
           .getValue(select.recordId)
           .catch((err: any) => console.log(err), [])) || [];
+
       selected.field = field;
       selected.select = select;
       vals.map((val: any, i: string | number) => {
-        selected.selectImages.push({
+        selected.selectFiles.push({
           val,
           url: urls[i],
         });
       });
-      if (current > selected.selectImages.length - 1) {
+
+      if (current > selected.selectFiles.length - 1) {
         setCurrent(-1);
       }
       console.log(selected);
@@ -158,91 +179,6 @@ export default function Home() {
     init();
   });
 
-  const openImgEditor = useCallback(
-    async (index: number) => {
-      if (!selected) {
-        return;
-      }
-      if (!fullMode) {
-        return setCurrent(index);
-      }
-      if (!window) {
-        return setCurrent(index);
-      }
-      const nextWin = window.open(`/editor`, "_blank", "fullscreen=yes") as any;
-      if (!nextWin) {
-        return;
-      }
-      setCurrent(index);
-      const selectImage = selected.selectImages[index];
-      nextWin.bridge = {
-        getOptions: () => {
-          return {
-            source: selectImage.url,
-            defaultSavedImageName: selectImage?.val?.name,
-            onSave: async (editedImageObject: any, designState: any) => {
-              console.log(editedImageObject, designState);
-              await saveImgEditor(editedImageObject as any, designState, index);
-              nextWin.close();
-            },
-            onClose: () => {
-              closeImgEditor();
-              nextWin.close();
-            },
-          };
-        },
-      };
-      nextWin.addEventListener("unload", () => {
-        if (nextWin.isLoaded) {
-          closeImgEditor();
-        }
-      });
-      setNextWin(nextWin);
-    },
-    [selected, fullMode]
-  );
-
-  const closeImgEditor = useCallback(() => {
-    setCurrent(-1);
-  }, []);
-
-  const saveImgEditor = async (
-    {
-      imageCanvas,
-      fullName,
-      mimeType,
-      imageBase64,
-    }: {
-      imageBase64: string;
-      imageCanvas: HTMLCanvasElement;
-      fullName: string;
-      mimeType: string;
-    },
-    imageDesignState: any,
-    index: number = current
-  ) => {
-    const file = await canvasToFile(imageCanvas, fullName, mimeType);
-    // console.log(file);
-    // const file = await base64ToFile(imageBase64, fullName, mimeType);
-    // downloadFile(file);
-    if (!selected?.selectImages) {
-      throw new Error();
-    }
-    const newSelectImages = ([] as any).concat(selected.selectImages);
-    newSelectImages[index] = {
-      val: await fileToIOpenAttachment(base, file),
-      url: await fileToURL(file),
-    };
-
-    // console.log(newSelectImages, index);
-
-    const newSelected = { ...selected, selectImages: newSelectImages };
-    saveTable(newSelected);
-    setSelected(newSelected);
-    setCurrent(-1);
-    Toast.success({ content: t("save-success") });
-  };
-
   const onSortEnd = (oldIndex: number, newIndex: number) => {
     // console.log("setSelected", oldIndex, newIndex);
     setSelected((selected) => {
@@ -250,7 +186,7 @@ export default function Home() {
         const newSelected = {
           ...selected,
           selectImages: arrayMoveImmutable(
-            selected.selectImages,
+            selected.selectFiles,
             oldIndex,
             newIndex
           ),
@@ -265,29 +201,40 @@ export default function Home() {
   const saveTable = useCallback(function saveTable(selected: Selected) {
     return selected.field.setValue(
       selected.select.recordId,
-      selected.selectImages.map((item: any) => item.val)
+      selected.selectFiles.map((item: any) => item.val)
     );
   }, []);
 
-  const clickRename = useCallback(
+  const renameFile = useCallback(
     async (index: number) => {
       const res = await alertInput({
         title: t("modal-title"),
         content: t("modal-content"),
         emptyText: t("modal-empty-text"),
-        defaultValue: selected?.selectImages[index].val.name,
+        defaultValue: selected?.selectFiles[index].val.name,
       });
       console.log(res);
       if (res.ok && res.data) {
-        const newSelectImages = ([] as any).concat(selected?.selectImages);
+        const newSelectImages = ([] as any).concat(selected?.selectFiles);
         newSelectImages[index].val.name = res.data;
-        console.log(newSelectImages === selected?.selectImages);
+        console.log(newSelectImages === selected?.selectFiles);
         const newSelected: any = { ...selected, selectImages: newSelectImages };
         saveTable(newSelected);
         setSelected(newSelected);
       }
     },
-    [alertInput, selected?.selectImages]
+    [alertInput, saveTable, selected, t]
+  );
+
+  const getUrlLink = useCallback(
+    (file: any) => {
+      return table.getAttachmentUrl(
+        file.val.token,
+        selected?.select.fieldId,
+        selected?.select.recordId
+      );
+    },
+    [selected?.select.fieldId, selected?.select.recordId]
   );
 
   const menu = [
@@ -298,14 +245,45 @@ export default function Home() {
       onClick() {
         if (params.current) {
           const index = (params.current as any).index;
-          const img = selected?.selectImages[index];
-          if (!img) {
+          const file = selected?.selectFiles[index];
+          if (!file) {
             return;
           }
           setTimeout(() => {
-            img.val.type.includes("image")
-              ? openImgEditor(index)
-              : Toast.warning({ content: t("no-support-file") });
+            openFile(file, index);
+          }, 1);
+        }
+      },
+    },
+    { node: "divider" },
+    {
+      node: "item",
+      name: t("menu-link"),
+      type: "tertiary",
+      onClick() {
+        if (params.current) {
+          const index = (params.current as any).index;
+          setTimeout(async () => {
+            const tid = Toast.info({
+              icon: <Spin />,
+              content: t("copying"),
+              duration: 0,
+            });
+            const file = selected?.selectFiles[index];
+            const url = await getUrlLink(file);
+            if (!file) {
+              return;
+            }
+            // 放置内容到剪切板
+            copyText(url);
+            Toast.success({ content: t("copy-success") });
+            Notification.addNotice({
+              type: "warning",
+              title: t("copy-tip-title"),
+              content: t("copy-tip-content"),
+              position: "bottom",
+            });
+            Toast.close(tid);
           }, 1);
         }
       },
@@ -317,7 +295,7 @@ export default function Home() {
       type: "tertiary",
       onClick() {
         if (params.current) {
-          clickRename((params.current as any).index);
+          renameFile((params.current as any).index);
         }
       },
     },
@@ -334,26 +312,26 @@ export default function Home() {
                 {
                   key: t("menu-info-filename"),
                   value:
-                    selected?.selectImages[(params.current as any).index].val
+                    selected?.selectFiles[(params.current as any).index].val
                       .name,
                 },
                 {
                   key: t("menu-info-filetype"),
                   value:
-                    selected?.selectImages[(params.current as any).index].val
+                    selected?.selectFiles[(params.current as any).index].val
                       .type,
                 },
                 {
                   key: t("menu-info-filesize"),
                   value: smartFileSizeDisplay(
-                    selected?.selectImages[(params.current as any).index].val
+                    selected?.selectFiles[(params.current as any).index].val
                       .size
                   ),
                 },
                 {
                   key: t("menu-info-filetime"),
                   value: smartTimestampDisplay(
-                    selected?.selectImages[(params.current as any).index].val
+                    selected?.selectFiles[(params.current as any).index].val
                       .timeStamp
                   ),
                 },
@@ -370,12 +348,13 @@ export default function Home() {
       onClick() {
         if (params.current) {
           const index = (params.current as any).index;
-          const img = selected?.selectImages[index];
-          if (!img) {
-            return;
-          }
           setTimeout(async () => {
-            downloadFile(await urlToFile(img.url, img.val.name, img.val.type));
+            const file = selected?.selectFiles[index];
+            if (!file) {
+              return;
+            }
+            const url = await getUrlLink(file);
+            downloadFile(await urlToFile(url, file.val.name, file.val.type));
           }, 1);
         }
       },
@@ -388,7 +367,7 @@ export default function Home() {
       async onClick() {
         if (params.current) {
           const index = (params.current as any).index;
-          console.log(index, selected?.selectImages[index]);
+          console.log(index, selected?.selectFiles[index]);
           const res = await alert({
             title: t("delete-title"),
             content: t("delete-content"),
@@ -396,7 +375,7 @@ export default function Home() {
           });
           console.log(res);
           if (res.ok) {
-            const newSelectImages = ([] as any).concat(selected?.selectImages);
+            const newSelectImages = ([] as any).concat(selected?.selectFiles);
             newSelectImages.splice(index, 1);
             const newSelected: any = {
               ...selected,
@@ -421,26 +400,49 @@ export default function Home() {
         showClose: false,
         duration: 0,
         icon: <Spin />,
-        content: t('loading'),
+        content: t("loading"),
       });
-      const newSelectImage = {
-        val: await fileToIOpenAttachment(base, file),
-        url: await fileToURL(file),
-      };
-      if(!selected?.selectImages) return;
-      const newSelectImages = selected.selectImages;
-      newSelectImages.push(newSelectImage);
-      const newSelected: any = {
-        ...selected,
-        selectImages: newSelectImages,
-      };
-      saveTable(newSelected);
-      setSelected(newSelected);
+      try {
+        const newSelectImage = {
+          val: await fileToIOpenAttachment(base, file),
+          url: await fileToURL(file),
+        };
+        if (!selected?.selectFiles) return;
+        const newSelectImages = selected.selectFiles;
+        newSelectImages.push(newSelectImage);
+        const newSelected: any = {
+          ...selected,
+          selectImages: newSelectImages,
+        };
+        saveTable(newSelected);
+        setSelected(newSelected);
+        Toast.success({ content: t("upload-success") + file.name });
+        o.onSuccess({ status: 201 });
+      } catch (error) {
+        Toast.error({ content: t("upload-fail") + String(error) });
+        o.onError(error);
+      }
       Toast.close(tid);
-      Toast.success({ content: t("upload-success") + file.name });
-      o.onSuccess({ status: 201 });
     },
-    [saveTable, selected]
+    [saveTable, selected, t]
+  );
+
+  const openFile = useCallback(
+    async (file: any, index: number) => {
+      const tid = Toast.info({
+        icon: <Spin />,
+        content: t("opening"),
+        duration: 0,
+      });
+      const url = await getUrlLink(file);
+      const nextWin = window.open(`/viewer`, "_blank");
+      if (nextWin) {
+        (nextWin as any).option = () => ({ url, type: file.val.type });
+      }
+      setNextWin(nextWin || undefined);
+      Toast.close(tid);
+    },
+    [getUrlLink]
   );
 
   return (
@@ -465,35 +467,55 @@ export default function Home() {
             <div>
               <Button
                 size="small"
+                icon={<IconFilledArrowUp size="small" />}
                 onClick={() => (uploadRef.current as any)?.openFileDialog()}
               >
                 上传
               </Button>
             </div>
-            <div className={styles["menu-item"]}>
+            {/* <div
+              className={styles["menu-item"]}
+              onClick={() => setConfMerge({ fullMode: !conf.fullMode })}
+            >
               <Text>{t("full-mode")}</Text>
               <Switch
                 size="small"
-                checked={fullMode}
-                onChange={setFullMode}
+                checked={conf.fullMode}
                 aria-label="open full model"
-              />
+              ></Switch>
+            </div> */}
+            <div
+              className={styles["menu-item"]}
+              onClick={() => (
+                setConfMerge({ previewMode: !conf.previewMode }),
+                Toast.info({ content: t("preview-tip") })
+              )}
+            >
+              <Text>{t("preview-mode")}</Text>
+              <Switch
+                size="small"
+                checked={conf.previewMode}
+                aria-label="open full model"
+              ></Switch>
             </div>
           </div>
           <Upload
-            style={{ margin: "5px", height: selected?.selectImages.length > 0 ? 'auto' : '70vh' }}
+            style={{
+              margin: "5px",
+              height: selected?.selectFiles.length > 0 ? "auto" : "70vh",
+            }}
             action="/upload"
             ref={uploadRef as any}
             draggable={true}
             dragMainText={t("upload-drag-text")}
-            dragSubText={t('upload-drag-sub')}
+            dragSubText={t("upload-drag-sub")}
             // uploadTrigger="custom"
             addOnPasting
             multiple
             showUploadList={false}
             customRequest={customRequest}
           >
-            {selected?.selectImages.length > 0 ? (
+            {selected?.selectFiles.length > 0 ? (
               <div
                 style={{ width: "100%" }}
                 onClick={(e) => {
@@ -506,20 +528,13 @@ export default function Home() {
                   draggedItemClassName="dragged"
                   className={styles["block-image"]}
                 >
-                  {selected?.selectImages?.map((img, index) => {
+                  {selected?.selectFiles?.map((file, index) => {
                     return (
-                      <SortableItem key={img.val.token}>
+                      <SortableItem key={file.val.token}>
                         {
                           <div
                             className={styles["image-item"]}
-                            style={{ background: "#eee" }}
-                            onClick={() =>
-                              img.val.type.includes("image")
-                                ? openImgEditor(index)
-                                : Toast.warning({
-                                    content: t("no-support-file"),
-                                  })
-                            }
+                            onClick={() => openFile(file, index)}
                             onContextMenu={(e) => {
                               popup(e as unknown as MouseEvent, menu, {
                                 index,
@@ -529,21 +544,26 @@ export default function Home() {
                             <img
                               className={styles["image"]}
                               src={
-                                img.val.type.includes("image")
-                                  ? img.url
-                                  : "/no-image.svg"
+                                file.val.type.startsWith("image") &&
+                                storeConf.previewMode
+                                  ? file.url
+                                  : getFileTypeIconAsUrl({
+                                      extension:
+                                        fileExt(file.val.name)[1] || "file",
+                                    })
                               }
-                              alt={img.val.name}
+                              alt={file.val.name}
                               style={{ width: "100%", height: "100%" }}
                             />
+
                             <Text
                               ellipsis={true}
                               className={styles["title"]}
                               size="small"
                               onClick={(e) => e.stopPropagation()}
-                              onDoubleClickCapture={() => clickRename(index)}
+                              onDoubleClickCapture={() => renameFile(index)}
                             >
-                              {img.val.name}
+                              {file.val.name}
                             </Text>
                           </div>
                         }
@@ -556,7 +576,7 @@ export default function Home() {
           </Upload>
           <div className={styles["image-tip"]}>{t("image-tip")}</div>
         </>
-      ) : fullMode ? (
+      ) : conf ? (
         <div>
           <Empty
             image={
@@ -590,14 +610,7 @@ export default function Home() {
           </Empty>
         </div>
       ) : (
-        <div style={{ height: "100vh" }}>
-          <Editor
-            source={selected.selectImages[current].url}
-            defaultSavedImageName={selected.selectImages[current]?.val?.name}
-            onSave={saveImgEditor}
-            onClose={closeImgEditor}
-          />
-        </div>
+        <div style={{ height: "100vh" }}>{/* 打开编辑窗口 */}</div>
       )}
       <div
         style={{
@@ -607,17 +620,7 @@ export default function Home() {
           marginTop: "5px",
           color: "#666",
         }}
-      >
-        <IconHelpCircle
-          size="large"
-          onClick={() => open("https://zhuanlan.zhihu.com/p/662689669")}
-        />
-        <IconGithubLogo
-          size="large"
-          style={{ marginLeft: "5px" }}
-          onClick={() => open("https://github.com/WumaCoder/bs-viewer")}
-        />
-      </div>
+      ></div>
     </div>
   );
 }
