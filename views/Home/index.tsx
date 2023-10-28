@@ -185,7 +185,7 @@ export default function Home() {
       if (selected) {
         const newSelected = {
           ...selected,
-          selectImages: arrayMoveImmutable(
+          selectFiles: arrayMoveImmutable(
             selected.selectFiles,
             oldIndex,
             newIndex
