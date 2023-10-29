@@ -380,7 +380,7 @@ export default function Home() {
             newSelectImages.splice(index, 1);
             const newSelected: any = {
               ...selected,
-              selectImages: newSelectImages,
+              selectFiles: newSelectImages,
             };
             saveTable(newSelected);
             setSelected(newSelected);
@@ -461,33 +461,42 @@ export default function Home() {
         Toast.error({ content: t("paste-import-fail") });
         return;
       }
-      const tid = Toast.info({
-        icon: <Spin />,
-        content: t("loading"),
-        duration: 0,
-      });
-      try {
-        const file = await urlToFile(text.data, splitFilename(text.data));
-        const newSelectImage = {
-          val: await fileToIOpenAttachment(base, file),
-          url: await fileToURL(file),
-        };
-        if (!selected?.selectFiles) return;
-        const newSelectImages = selected.selectFiles;
-        newSelectImages.push(newSelectImage);
-        const newSelected: any = {
-          ...selected,
-          selectImages: newSelectImages,
-        };
-        saveTable(newSelected);
-        setSelected(newSelected);
-        Toast.success({ content: t("upload-success") + file.name });
-      } catch (error) {
-        Toast.error({ content: t("upload-fail") + String(error) });
+      const urls = text.data
+        .split("http")
+        .filter((item) => item)
+        .map((url) => "http" + url.trim());
+      console.log(urls);
+
+      for (let i = 0; i < urls.length; i++) {
+        const url = urls[i];
+        const tid = Toast.info({
+          icon: <Spin />,
+          content: t("loading"),
+          duration: 0,
+        });
+        try {
+          const file = await urlToFile(url, Date.now() + "");
+          const newSelectImage = {
+            val: await fileToIOpenAttachment(base, file),
+            url: await fileToURL(file),
+          };
+          if (!selected?.selectFiles) return;
+          const newSelectImages = selected.selectFiles;
+          newSelectImages.push(newSelectImage);
+          const newSelected: any = {
+            ...selected,
+            selectImages: newSelectImages,
+          };
+          saveTable(newSelected);
+          setSelected(newSelected);
+          Toast.success({ content: t("upload-success") + file.name });
+        } catch (error) {
+          Toast.error({ content: t("upload-fail") + String(error) });
+        }
+        Toast.close(tid);
       }
-      Toast.close(tid);
     }
-  }, []);
+  }, [saveTable, selected, t]);
 
   return (
     <div>
