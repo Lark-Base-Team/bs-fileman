@@ -437,7 +437,9 @@ export default function Home() {
       });
       const url = await getUrlLink(file);
       const nextWin = window.open(
-        `/viewer?url=${encodeURI(url)}&type=${file.val.type}`,
+        `/viewer?url=${encodeURI(url)}&type=${file.val.type}&ext=${
+          fileExt(file.val.name)[1]
+        }`,
         "_blank"
       );
       // if (nextWin) {

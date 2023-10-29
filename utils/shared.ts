@@ -1,5 +1,6 @@
 "use client";
 import type { IOpenAttachment } from "@lark-base-open/js-sdk";
+import getProgrammingLanguaget from "detect-programming-language";
 
 export async function fileToIOpenAttachment(
   base: any,
@@ -163,4 +164,9 @@ export function splitFilename(url: string) {
   const idx2 = url.lastIndexOf("?");
   const name = url.slice(idx + 1, idx2 === -1 ? undefined : idx2);
   return name;
+}
+
+export function getProgrammingLanguage(ext: string) {
+  // if (ext.startsWith(".json")) return "json";
+  return getProgrammingLanguaget(ext) || ext.substring(1);
 }

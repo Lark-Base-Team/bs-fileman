@@ -18,6 +18,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/router";
+import { getProgrammingLanguage } from "../../utils/shared";
 
 // let options = {
 //   url: "",
@@ -34,19 +35,27 @@ import { useRouter } from "next/router";
 // let type = options.type;
 
 // console.log(options);
-
+let load = false;
 export default function Edit() {
   const [t, i18n] = useTranslation();
   const router = useRouter();
-  const { url = "", type = "" } = router.query as any;
-  const [sub = "", sup = ""] = type.split("/");
-  const defaultChild = () => {
-    typeof open !== "undefined" && open(url);
-    return <h1 style={{ color: "#fff" }}>{t("viewer-no-support")}</h1>;
-  };
-  const child =
-    (
-      {
+  const [child, setChild] = useState<any>(<></>);
+  let { url = "", type = "", ext = "" } = router.query as any;
+  if (!type) type = "text";
+
+  useEffect(() => {
+    (async () => {
+      if (load) return;
+      load = true;
+      const [sub = "", sup = ""] = type.split("/");
+      console.log(sub, sup);
+
+      const defaultChild = () => {
+        typeof open !== "undefined" && open(url);
+        return <h1 style={{ color: "#fff" }}>{t("viewer-no-support")}</h1>;
+      };
+
+      const childMap = {
         image: () => <ImagePreview src={url} visible={true} onClose={close} />,
         video: () => {
           const ReactPlayer = dynamic(() => import("react-player"), {
@@ -102,11 +111,39 @@ export default function Edit() {
                 <PDF url={url}></PDF>
               </div>
             );
+          } else if (type.includes("json")) {
+            return childMap.text();
           }
           return <h1 style={{ color: "#fff" }}>{t("viewer-no-support")}</h1>;
         },
-      }[sub as string] ?? defaultChild
-    )() ?? defaultChild();
+        text: async () => {
+          const Editor = dynamic(() => import("@monaco-editor/react"), {
+            ssr: false,
+          });
+          const code = await fetch(url).then((res) => res.text());
+
+          const lang = getProgrammingLanguage(ext) as string;
+
+          console.log(ext, lang);
+          return (
+            <Editor
+              height="100vh"
+              width="100vw"
+              defaultValue={code}
+              defaultLanguage={lang.toLowerCase()}
+            />
+          );
+        },
+      };
+
+      const child =
+        (await (childMap[sub as keyof typeof childMap] ?? defaultChild)()) ??
+        defaultChild();
+      console.log(child);
+
+      setChild(child);
+    })();
+  });
 
   return (
     <>
