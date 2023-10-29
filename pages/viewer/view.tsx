@@ -18,29 +18,28 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/router";
-import { IconBackward, IconUndo } from "@douyinfe/semi-icons";
-import ReactPlayer from "react-player";
-import DocViewer from "@cyntler/react-doc-viewer";
 
-let options = {
-  url: "",
-  type: "",
-};
-if (typeof window !== "undefined") {
-  options = (window as any).option();
-  window.onload = () => {
-    (window as any).isLoaded = true;
-  };
-}
+// let options = {
+//   url: "",
+//   type: "",
+// };
+// if (typeof window !== "undefined") {
+//   options = (window as any).option();
+//   window.onload = () => {
+//     (window as any).isLoaded = true;
+//   };
+// }
 
-const url = options.url;
-const type = options.type;
-const [sub, sup] = type.split("/");
+// let url = options.url;
+// let type = options.type;
 
-console.log(options);
+// console.log(options);
 
 export default function Edit() {
   const [t, i18n] = useTranslation();
+  const router = useRouter();
+  const { url = "", type = "" } = router.query as any;
+  const [sub = "", sup = ""] = type.split("/");
   const defaultChild = () => {
     typeof open !== "undefined" && open(url);
     return <h1 style={{ color: "#fff" }}>{t("viewer-no-support")}</h1>;
@@ -49,18 +48,35 @@ export default function Edit() {
     (
       {
         image: () => <ImagePreview src={url} visible={true} onClose={close} />,
-        video: () => (
-          <ReactPlayer
-            url={url}
-            controls
-            pip
-            width={"100%"}
-            height={"100%"}
-          ></ReactPlayer>
-        ),
-        audio: () => <ReactPlayer url={url} controls></ReactPlayer>,
+        video: () => {
+          const ReactPlayer = dynamic(() => import("react-player"), {
+            ssr: false,
+          });
+          return (
+            <ReactPlayer
+              url={url}
+              controls
+              pip
+              width={"100%"}
+              height={"100%"}
+            ></ReactPlayer>
+          );
+        },
+        audio: () => {
+          const ReactPlayer = dynamic(() => import("react-player"), {
+            ssr: false,
+          });
+          return <ReactPlayer url={url} controls></ReactPlayer>;
+        },
+
         application: () => {
           if (type.includes("office")) {
+            const DocViewer = dynamic(
+              () => import("@cyntler/react-doc-viewer"),
+              {
+                ssr: false,
+              }
+            );
             return (
               <DocViewer
                 documents={[
@@ -77,10 +93,19 @@ export default function Edit() {
                 }}
               />
             );
+          } else if (type.includes("pdf")) {
+            const PDF = dynamic(() => import("../../components/PDF"), {
+              ssr: false,
+            });
+            return (
+              <div style={{ height: "100%", width: "60%" }}>
+                <PDF url={url}></PDF>
+              </div>
+            );
           }
           return <h1 style={{ color: "#fff" }}>{t("viewer-no-support")}</h1>;
         },
-      }[sub] ?? defaultChild
+      }[sub as string] ?? defaultChild
     )() ?? defaultChild();
 
   return (
@@ -97,6 +122,7 @@ export default function Edit() {
             justifyContent: "center",
             alignItems: "center",
             background: "#000",
+            overflow: "auto",
           }}
         >
           {/* <Button

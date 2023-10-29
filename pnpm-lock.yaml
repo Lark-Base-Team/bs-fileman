@@ -26,6 +26,9 @@ dependencies:
   '@lark-base-open/js-sdk':
     specifier: ^0.3.4
     version: registry.npmjs.org/@lark-base-open/js-sdk@0.3.4
+  '@wojtekmaj/react-hooks':
+    specifier: ^1.18.1
+    version: registry.npmjs.org/@wojtekmaj/react-hooks@1.18.1(@types/react@18.2.23)(react@18.2.0)
   array-move:
     specifier: ^4.0.0
     version: registry.npmjs.org/array-move@4.0.0
@@ -50,6 +53,9 @@ dependencies:
   react-i18next:
     specifier: ^13.2.2
     version: registry.npmjs.org/react-i18next@13.2.2(i18next@23.5.1)(react-dom@18.2.0)(react@18.2.0)
+  react-pdf:
+    specifier: ^7.5.1
+    version: registry.npmjs.org/react-pdf@7.5.1(@types/react@18.2.23)(react-dom@18.2.0)(react@18.2.0)
   react-player:
     specifier: ^2.13.0
     version: registry.npmjs.org/react-player@2.13.0(react@18.2.0)
@@ -1670,6 +1676,22 @@ packages:
       '@typescript-eslint/types': registry.npmjs.org/@typescript-eslint/types@6.7.3
       eslint-visitor-keys: registry.npmjs.org/eslint-visitor-keys@3.4.3
     dev: true
+
+  registry.npmjs.org/@wojtekmaj/react-hooks@1.18.1(@types/react@18.2.23)(react@18.2.0):
+    resolution: {integrity: sha512-hvaKC4+xBt+jrccMZsV3oHveaAjcO/Lw833vH78Y/auIwya14H4WH9E1i7EEnm/RcGJmUzCYNA9Ulx9aY1TMhQ==, registry: https://registry.yarnpkg.com/, tarball: https://registry.npmjs.org/@wojtekmaj/react-hooks/-/react-hooks-1.18.1.tgz}
+    id: registry.npmjs.org/@wojtekmaj/react-hooks/1.18.1
+    name: '@wojtekmaj/react-hooks'
+    version: 1.18.1
+    peerDependencies:
+      '@types/react': ^16.8.0 || ^17.0.0 || ^18.0.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    dependencies:
+      '@types/react': registry.npmjs.org/@types/react@18.2.23
+      react: registry.npmjs.org/react@18.2.0
+    dev: false
 
   registry.npmjs.org/abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==, registry: https://registry.yarnpkg.com/, tarball: https://registry.npmjs.org/abbrev/-/abbrev-1.1.1.tgz}
@@ -5422,6 +5444,35 @@ packages:
     id: registry.npmjs.org/react-pdf/7.5.0
     name: react-pdf
     version: 7.5.0
+    peerDependencies:
+      '@types/react': ^16.8.0 || ^17.0.0 || ^18.0.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    dependencies:
+      '@types/react': registry.npmjs.org/@types/react@18.2.23
+      clsx: registry.npmjs.org/clsx@2.0.0
+      make-cancellable-promise: registry.npmjs.org/make-cancellable-promise@1.3.2
+      make-event-props: registry.npmjs.org/make-event-props@1.6.2
+      merge-refs: registry.npmjs.org/merge-refs@1.2.2(@types/react@18.2.23)
+      pdfjs-dist: registry.npmjs.org/pdfjs-dist@3.11.174
+      prop-types: registry.npmjs.org/prop-types@15.8.1
+      react: registry.npmjs.org/react@18.2.0
+      react-dom: registry.npmjs.org/react-dom@18.2.0(react@18.2.0)
+      tiny-invariant: registry.npmjs.org/tiny-invariant@1.3.1
+      tiny-warning: registry.npmjs.org/tiny-warning@1.0.3
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+    dev: false
+
+  registry.npmjs.org/react-pdf@7.5.1(@types/react@18.2.23)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-NVno97L3wfX3RLGB3C+QtroOiQrgCKPHLMFKMSQaRqDlH3gkq2CB2NyXJ+IDQNLrT/gSMPPgtZQL8cOUySc/3w==, registry: https://registry.yarnpkg.com/, tarball: https://registry.npmjs.org/react-pdf/-/react-pdf-7.5.1.tgz}
+    id: registry.npmjs.org/react-pdf/7.5.1
+    name: react-pdf
+    version: 7.5.1
     peerDependencies:
       '@types/react': ^16.8.0 || ^17.0.0 || ^18.0.0
       react: ^16.8.0 || ^17.0.0 || ^18.0.0

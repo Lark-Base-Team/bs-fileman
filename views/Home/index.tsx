@@ -436,10 +436,13 @@ export default function Home() {
         duration: 0,
       });
       const url = await getUrlLink(file);
-      const nextWin = window.open(`/viewer`, "_blank");
-      if (nextWin) {
-        (nextWin as any).option = () => ({ url, type: file.val.type });
-      }
+      const nextWin = window.open(
+        `/viewer?url=${encodeURI(url)}&type=${file.val.type}`,
+        "_blank"
+      );
+      // if (nextWin) {
+      //   (nextWin as any).option = () => ({ url, type: file.val.type });
+      // }
       setNextWin(nextWin || undefined);
       Toast.close(tid);
     },
