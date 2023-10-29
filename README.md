@@ -1,31 +1,32 @@
-## Base Viewer
+## Base Fileman
 
-> 一个可以编辑图片的多维表格插件。
-
-![image-20230929231202001](README.assets/image-20230929231202001.png)
-
-![image-20230929231227434](README.assets/image-20230929231227434.png)
-
-![image-20230929231804370](README.assets/image-20230929231804370.png)
-
-![image-20230929231826517](README.assets/image-20230929231826517.png)
-
-![image-20230929231853080](README.assets/image-20230929231853080.png)
+![a3803633-3fc9-45e2-8bc8-413e5af59467](README.assets/a3803633-3fc9-45e2-8bc8-413e5af59467.jpeg)
 
 ### Feature
 
-- 图片编辑
-- 图片裁剪
-- 图片标记
-- 图片颜色调整
-- 重命名图片
+一个强大的附件管理功能，并且支持多种文件的查看。
+
+附件管理功能
+
+- 上传附件（粘贴导入(支持批量)、拖动导入、点击导入）
+- 删除附件
+- 修改附件顺序（拖动修改）
+- 查看附件详情
+- 复制附件链接
+- 重命名附件
+  查看附件功能
+- 媒体文件查看（音频、视频、图片）
+- 文档文件查看（office 三件套、PDF）
+- 代码文件查看（text、JSON、js、ts...）
+  其他暂未实现
+- 压缩包查看
 
 ### Getting Started
 
 1️⃣ clone deme
 
 ```
-git clone https://github.com/WumaCoder/bs-viewer
+git clone https://github.com/lib-pack/bs-fileman
 pnpm install
 pnpm dev
 ```
