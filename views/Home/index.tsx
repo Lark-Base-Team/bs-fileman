@@ -173,6 +173,7 @@ export default function Home() {
     base.onSelectionChange(() => onSelectionChangeRef.current());
     lang = await bridge.getLanguage();
     i18n.changeLanguage(lang.includes("zh") ? "zh" : "en");
+    console.log("check lang:", i18n, lang);
     await onSelectionChangeRef.current();
     setLoading(false);
   }, [i18n]);
