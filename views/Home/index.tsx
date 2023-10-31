@@ -172,10 +172,10 @@ export default function Home() {
     bridge = (bitable as any).bridge;
     base.onSelectionChange(() => onSelectionChangeRef.current());
     lang = await bridge.getLanguage();
-    // i18n.changeLanguage(lang);
+    i18n.changeLanguage(lang.includes("zh") ? "zh" : "en");
     await onSelectionChangeRef.current();
     setLoading(false);
-  }, []);
+  }, [i18n]);
   useEffect(() => {
     init();
   });
