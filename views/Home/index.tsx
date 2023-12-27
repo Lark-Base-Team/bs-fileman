@@ -68,7 +68,7 @@ if (typeof window !== "undefined") {
 
 const defaultConf = {
   fullMode: false,
-  previewMode: false,
+  previewMode: true,
 };
 
 const storeConf =
