@@ -1,21 +1,11 @@
-import type { NextPage } from 'next'
-import Head from 'next/head'
-import dynamic from 'next/dynamic'
+import type { NextPage } from "next";
+import Head from "next/head";
+import dynamic from "next/dynamic";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 
-const DynamicComponentWithNoSSR = dynamic(
-  () => import('./App'),
-  { ssr: false }
-)
-
-export async function getStaticProps({ locale }: any) {
-  return {
-    props: {
-      ...(await serverSideTranslations(locale, ["common"])),
-      // Will be passed to the page component as props
-    },
-  };
-}
+const DynamicComponentWithNoSSR = dynamic(() => import("./App"), {
+  ssr: false,
+});
 
 const Home: NextPage = () => {
   return (
@@ -26,7 +16,7 @@ const Home: NextPage = () => {
       </Head>
       <DynamicComponentWithNoSSR></DynamicComponentWithNoSSR>
     </>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

@@ -7,4 +7,6 @@ module.exports = {
   fallbackLng: {
     default: ['zh', 'en'],
   },
+  nonExplicitSupportedLngs: true,
+  reloadOnPrerender: true,
 };
